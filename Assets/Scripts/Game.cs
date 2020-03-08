@@ -32,6 +32,9 @@ public class Game : MonoBehaviour
     private AnimationCurve PowerCurve = null;
 
     [SerializeField]
+    Transform PointsTxt;
+
+    [SerializeField]
     private float AimSpeed = 0.5f;
 
     [SerializeField]
@@ -50,6 +53,7 @@ public class Game : MonoBehaviour
 
     void Start()
     {
+        PointsTxt.gameObject.SetActive(false);
         Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
     }
 
@@ -135,7 +139,10 @@ public class Game : MonoBehaviour
                 }
             }
 
-            Debug.Log(points);
+            PointsTxt.GetComponentInChildren<TMPro.TextMeshProUGUI>().text = points + " points";
+            PointsTxt.gameObject.SetActive(true);
+            PointsTxt.position = Cam.WorldToScreenPoint(Rocket.transform.position);
+            PointsTxt.GetComponentInChildren<Animator>().SetTrigger("Drift");
 
             CurrentState = EState.Land;
         }
