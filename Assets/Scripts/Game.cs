@@ -140,7 +140,7 @@ public class Game : MonoBehaviour
             RocketClone.GetComponent<Animator>().SetFloat("SpinSpeed", RocketClone.GetComponent<Rigidbody2D>().velocity.magnitude / 20.0f);
         }
 
-        if (Rocket.transform.position.x > 0.0f)
+        if (Rocket.transform.position.x > 0.0f && Rocket.transform.position.x > Cam.transform.position.x)
         {
             Cam.transform.position = new Vector3(Rocket.transform.position.x, Cam.transform.position.y, Cam.transform.position.z);
         }
