@@ -64,7 +64,7 @@ public class Game : MonoBehaviour
             }
 
             AimTimer += Time.deltaTime * AimSpeed;
-            float rot = LaunchCurve.Evaluate(AimTimer) * AimSpeed / 0.9f;
+            float rot = LaunchCurve.Evaluate(AimTimer) * AimSpeed * 1.8f;
 
             Rocket.RotateAround(LaunchOrigin.position, new Vector3(0.0f, 0.0f, 1.0f), rot);
         }
@@ -76,10 +76,15 @@ public class Game : MonoBehaviour
 
             if (Input.GetMouseButtonDown(0))
             {
+                var rot = Rocket.transform.rotation.eulerAngles * Mathf.Deg2Rad;
+                Vector2 vel = new Vector2(Mathf.Cos(rot.z), Mathf.Sin(rot.z));
+                vel *= power * 16;
+
                 AimTimer = 0.0f;
                 AimState = EAimSubState.Angle;
                 CurrentState = EState.Fly;
                 Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
+                Rocket.GetComponent<Rigidbody2D>().velocity = vel;
                 return;
             }
         }
@@ -87,7 +92,10 @@ public class Game : MonoBehaviour
 
     void TickFlyState()
     {
-        Cam.transform.position += Vector3.right * Time.deltaTime * 2.0f;
+        if (Rocket.transform.position.x > 0.0f)
+        {
+            Cam.transform.position = new Vector3(Rocket.transform.position.x, Cam.transform.position.y, Cam.transform.position.z);
+        }
     }
 
     void TickLandState()
