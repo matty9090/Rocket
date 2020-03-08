@@ -11,6 +11,9 @@ public class Game : MonoBehaviour
     private Transform Rocket = null;
 
     [SerializeField]
+    private Target Target = null;
+
+    [SerializeField]
     private Sprite RocketTipMask = null;
 
     [SerializeField]
@@ -117,6 +120,24 @@ public class Game : MonoBehaviour
             Rocket.GetComponent<SpriteMask>().sprite = RocketTipMask;
             Rocket.GetComponent<Rocket>().BodyCollider.enabled = false;
             HasSeparated = true;
+        }
+
+        if (Rocket.GetComponent<Rigidbody2D>().velocity.sqrMagnitude < 0.1f)
+        {
+            int points = 0;
+            var rocketCollider = Rocket.GetComponent<Rocket>().TipCollider;
+
+            foreach (var collider in Target.Colliders)
+            {
+                if (collider.Collider.IsTouching(rocketCollider) && collider.Points > points)
+                {
+                    points = collider.Points;
+                }
+            }
+
+            Debug.Log(points);
+
+            CurrentState = EState.Land;
         }
     }
 
