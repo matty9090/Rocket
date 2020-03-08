@@ -50,6 +50,7 @@ public class Game : MonoBehaviour
 
     // Fly state
     bool HasSeparated = false;
+    Transform RocketClone = null;
 
     void Start()
     {
@@ -84,7 +85,7 @@ public class Game : MonoBehaviour
 
             Rocket.RotateAround(LaunchOrigin.position, new Vector3(0.0f, 0.0f, 1.0f), rot);
         }
-        else if(AimState == EAimSubState.Power)
+        else if (AimState == EAimSubState.Power)
         {
             AimTimer += Time.deltaTime * PowerSpeed;
             float power = PowerCurve.Evaluate(AimTimer);
@@ -102,6 +103,7 @@ public class Game : MonoBehaviour
                 Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
                 Rocket.GetComponent<Rigidbody2D>().velocity = vel;
                 Rocket.GetComponent<Animator>().SetTrigger("Spin");
+                Rocket.GetComponent<Animator>().SetTrigger("Flame");
                 return;
             }
         }
@@ -109,20 +111,33 @@ public class Game : MonoBehaviour
 
     void TickFlyState()
     {
+        Rocket.GetComponent<Animator>().SetFloat("SpinSpeed", Rocket.GetComponent<Rigidbody2D>().velocity.magnitude / 20.0f);
+        
+        if (RocketClone != null)
+        {
+            RocketClone.GetComponent<Animator>().SetFloat("SpinSpeed", RocketClone.GetComponent<Rigidbody2D>().velocity.magnitude / 20.0f);
+        }
+
         if (Rocket.transform.position.x > 0.0f)
         {
             Cam.transform.position = new Vector3(Rocket.transform.position.x, Cam.transform.position.y, Cam.transform.position.z);
-            Rocket.GetComponent<Animator>().SetFloat("SpinSpeed", Rocket.GetComponent<Rigidbody2D>().velocity.magnitude / 20.0f);
+        }
+
+        if (Rocket.transform.position.y > 0.0f)
+        {
+            Cam.transform.position = new Vector3(Cam.transform.position.x, Rocket.transform.position.y, Cam.transform.position.z);
         }
 
         if (!HasSeparated && Rocket.GetComponent<Rigidbody2D>().velocity.y < 0.0f)
         {
-            var clone = Instantiate(Rocket);
-            clone.GetComponent<Rigidbody2D>().velocity = Rocket.GetComponent<Rigidbody2D>().velocity * 0.8f;
-            clone.GetComponent<SpriteMask>().sprite = RocketBodyMask;
-            clone.GetComponent<Rocket>().TipCollider.enabled = false;
+            RocketClone = Instantiate(Rocket);
+            RocketClone.GetComponent<Rigidbody2D>().velocity = Rocket.GetComponent<Rigidbody2D>().velocity * 0.8f;
+            RocketClone.GetComponent<SpriteMask>().sprite = RocketBodyMask;
+            RocketClone.GetComponent<Animator>().SetTrigger("Spin");
+            RocketClone.GetComponent<Rocket>().TipCollider.enabled = false;
             Rocket.GetComponent<SpriteMask>().sprite = RocketTipMask;
             Rocket.GetComponent<Rocket>().BodyCollider.enabled = false;
+            Rocket.GetComponent<Animator>().SetTrigger("FlameOut");
             HasSeparated = true;
         }
 

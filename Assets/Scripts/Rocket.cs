@@ -11,7 +11,7 @@ public class Rocket : MonoBehaviour
     {
         if (!TipCollider.enabled && collision.rigidbody.name == "Ground")
         {
-            Destroy(gameObject, 0.5f);
+            Destroy(gameObject, 0.8f);
         }
     }
 }
