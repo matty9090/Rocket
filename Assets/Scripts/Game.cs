@@ -38,7 +38,7 @@ public class Game : MonoBehaviour
 
     void Start()
     {
-        
+        Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
     }
 
     void Update()
@@ -64,7 +64,7 @@ public class Game : MonoBehaviour
             }
 
             AimTimer += Time.deltaTime * AimSpeed;
-            float rot = LaunchCurve.Evaluate(AimTimer) * AimSpeed * 1.8f;
+            float rot = LaunchCurve.Evaluate(AimTimer) * 160.0f * Time.deltaTime;
 
             Rocket.RotateAround(LaunchOrigin.position, new Vector3(0.0f, 0.0f, 1.0f), rot);
         }
@@ -85,6 +85,7 @@ public class Game : MonoBehaviour
                 CurrentState = EState.Fly;
                 Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Dynamic;
                 Rocket.GetComponent<Rigidbody2D>().velocity = vel;
+                Rocket.GetComponent<Animator>().SetTrigger("Spin");
                 return;
             }
         }
@@ -95,6 +96,7 @@ public class Game : MonoBehaviour
         if (Rocket.transform.position.x > 0.0f)
         {
             Cam.transform.position = new Vector3(Rocket.transform.position.x, Cam.transform.position.y, Cam.transform.position.z);
+            Rocket.GetComponent<Animator>().SetFloat("SpinSpeed", Rocket.GetComponent<Rigidbody2D>().velocity.magnitude / 20.0f);
         }
     }
 
