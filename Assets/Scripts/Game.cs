@@ -225,7 +225,7 @@ public class Game : MonoBehaviour
         Rocket = Instantiate(RocketPrefab);
         Rocket.transform.position = RocketStart.position;
         Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
-        
+        PowerBar.transform.localScale = new Vector3(1.0f, 0.0f, 1.0f);
         Cam.transform.position = CamStartPos;
         Target.transform.position = new Vector3(Random.Range(0.0f, 9.5f), Target.transform.position.y, Target.transform.position.z);
     }
