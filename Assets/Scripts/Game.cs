@@ -11,6 +11,12 @@ public class Game : MonoBehaviour
     private Transform Rocket = null;
 
     [SerializeField]
+    private Sprite RocketTipMask = null;
+
+    [SerializeField]
+    private Sprite RocketBodyMask = null;
+
+    [SerializeField]
     private PowerBar PowerBar = null;
 
     [SerializeField]
@@ -35,6 +41,9 @@ public class Game : MonoBehaviour
     private enum EAimSubState { Angle, Power };
     private EAimSubState AimState = EAimSubState.Angle;
     private float AimTimer = 0.0f;
+
+    // Fly state
+    bool HasSeparated = false;
 
     void Start()
     {
@@ -97,6 +106,17 @@ public class Game : MonoBehaviour
         {
             Cam.transform.position = new Vector3(Rocket.transform.position.x, Cam.transform.position.y, Cam.transform.position.z);
             Rocket.GetComponent<Animator>().SetFloat("SpinSpeed", Rocket.GetComponent<Rigidbody2D>().velocity.magnitude / 20.0f);
+        }
+
+        if (!HasSeparated && Rocket.GetComponent<Rigidbody2D>().velocity.y < 0.0f)
+        {
+            var clone = Instantiate(Rocket);
+            clone.GetComponent<Rigidbody2D>().velocity = Rocket.GetComponent<Rigidbody2D>().velocity * 0.8f;
+            clone.GetComponent<SpriteMask>().sprite = RocketBodyMask;
+            clone.GetComponent<Rocket>().TipCollider.enabled = false;
+            Rocket.GetComponent<SpriteMask>().sprite = RocketTipMask;
+            Rocket.GetComponent<Rocket>().BodyCollider.enabled = false;
+            HasSeparated = true;
         }
     }
 
