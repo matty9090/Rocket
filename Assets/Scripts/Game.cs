@@ -8,7 +8,13 @@ public class Game : MonoBehaviour
     private Camera Cam = null;
 
     [SerializeField]
-    private Transform Rocket = null;
+    private GameOver GameOverPanel = null;
+
+    [SerializeField]
+    private Transform RocketPrefab = null;
+
+    [SerializeField]
+    private Vector3 CamStartPos = Vector3.zero;
 
     [SerializeField]
     private Target Target = null;
@@ -23,7 +29,7 @@ public class Game : MonoBehaviour
     private PowerBar PowerBar = null;
 
     [SerializeField]
-    private Transform LaunchOrigin = null;
+    private Transform RocketStart = null;
 
     [SerializeField]
     private AnimationCurve LaunchCurve = null;
@@ -32,7 +38,7 @@ public class Game : MonoBehaviour
     private AnimationCurve PowerCurve = null;
 
     [SerializeField]
-    Transform PointsTxt;
+    Transform PointsTxt = null;
 
     [SerializeField]
     private float AimSpeed = 0.5f;
@@ -40,8 +46,22 @@ public class Game : MonoBehaviour
     [SerializeField]
     private float PowerSpeed = 0.5f;
 
-    private enum EState { Aim, Fly, Land };
+    [SerializeField]
+    private int NumRounds = 5;
+
+    [SerializeField]
+    private TMPro.TextMeshProUGUI TxtScore = null;
+
+    [SerializeField]
+    private TMPro.TextMeshProUGUI TxtRound = null;
+
+    private enum EState { Aim, Fly, Land, GameOver };
     private EState CurrentState = EState.Aim;
+
+    // Global state
+    private Transform Rocket = null;
+    private int Round = 1;
+    private int Score = 0;
 
     // Aim state
     private enum EAimSubState { Angle, Power };
@@ -52,10 +72,12 @@ public class Game : MonoBehaviour
     bool HasSeparated = false;
     Transform RocketClone = null;
 
+    // Land state
+    float ResetTimer = 0.0f;
+
     void Start()
     {
-        PointsTxt.gameObject.SetActive(false);
-        Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+        ResetRocket();
     }
 
     void Update()
@@ -83,7 +105,7 @@ public class Game : MonoBehaviour
             AimTimer += Time.deltaTime * AimSpeed;
             float rot = LaunchCurve.Evaluate(AimTimer) * 160.0f * Time.deltaTime;
 
-            Rocket.RotateAround(LaunchOrigin.position, new Vector3(0.0f, 0.0f, 1.0f), rot);
+            Rocket.RotateAround(Rocket.Find("LaunchOrigin").position, new Vector3(0.0f, 0.0f, 1.0f), rot);
         }
         else if (AimState == EAimSubState.Power)
         {
@@ -123,7 +145,7 @@ public class Game : MonoBehaviour
             Cam.transform.position = new Vector3(Rocket.transform.position.x, Cam.transform.position.y, Cam.transform.position.z);
         }
 
-        if (Rocket.transform.position.y > 0.0f)
+        if (Rocket.transform.position.y > CamStartPos.y)
         {
             Cam.transform.position = new Vector3(Cam.transform.position.x, Rocket.transform.position.y, Cam.transform.position.z);
         }
@@ -159,12 +181,81 @@ public class Game : MonoBehaviour
             PointsTxt.position = Cam.WorldToScreenPoint(Rocket.transform.position);
             PointsTxt.GetComponentInChildren<Animator>().SetTrigger("Drift");
 
+            Score += points;
+            HasSeparated = false;
             CurrentState = EState.Land;
+
+            TxtScore.text = "Score: " + Score;
+
+            ++Round;
+
+            if (Round > NumRounds)
+            {
+                CurrentState = EState.GameOver;
+                GameOver();
+            }
+            else
+            {
+                TxtRound.text = "Round " + Round + "/" + NumRounds;
+            }
         }
     }
 
     void TickLandState()
     {
+        ResetTimer += Time.deltaTime;
+
+        if (ResetTimer > 2.0f)
+        {
+            ResetTimer = 0.0f;
+            CurrentState = EState.Aim;
+            ResetRocket();
+        }
+    }
+
+    void ResetRocket()
+    {
+        PointsTxt.gameObject.SetActive(false);
         
+        if (Rocket != null)
+        {
+            Destroy(Rocket.gameObject);
+        }
+        
+        Rocket = Instantiate(RocketPrefab);
+        Rocket.transform.position = RocketStart.position;
+        Rocket.GetComponent<Rigidbody2D>().bodyType = RigidbodyType2D.Kinematic;
+        Cam.transform.position = CamStartPos;
+    }
+
+    public void PlayAgain()
+    {
+        Round = 1;
+        Score = 0;
+
+        TxtRound.text = "Round " + Round + "/" + NumRounds;
+        TxtScore.text = "Score: " + Score;
+
+        GameOverPanel.gameObject.SetActive(false);
+        CurrentState = EState.Aim;
+    }
+
+    void GameOver()
+    {
+        ResetRocket();
+        GameOverPanel.gameObject.SetActive(true);
+
+        bool hasKey = PlayerPrefs.HasKey("Highscore");
+
+        if (!hasKey || (hasKey && PlayerPrefs.GetInt("Highscore") < Score))
+        {
+            PlayerPrefs.SetInt("Highscore", Score);
+            PlayerPrefs.Save();
+            GameOverPanel.ShowHighscore(Score);
+        }
+        else
+        {
+            GameOverPanel.ShowNoHighscore(Score, PlayerPrefs.GetInt("Highscore"));
+        }
     }
 }
